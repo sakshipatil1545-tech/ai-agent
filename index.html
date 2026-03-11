@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Arrc SaaS - 11Lab Theme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            200: '#e5e7eb',
+                            300: '#d1d5db',
+                            400: '#9ca3af',
+                            500: '#6b7280',
+                            600: '#4b5563',
+                            700: '#374151',
+                            800: '#1f2937',
+                            900: '#111827',
+                            950: '#030712'
+                        },
+                        glass: {
+                            white: 'rgba(255, 255, 255, 0.12)',
+                            dark: 'rgba(15, 23, 42, 0.85)',
+                            card: 'rgba(255, 255, 255, 0.1)',
+                            sidebar: 'rgba(255, 255, 255, 0.08)',
+                            modal: 'rgba(17, 24, 39, 0.95)',
+                            nav: 'rgba(17, 24, 39, 0.85)',
+                            button: 'rgba(255, 255, 255, 0.18)',
+                            input: 'rgba(255, 255, 255, 0.12)',
+                            hover: 'rgba(255, 255, 255, 0.2)',
+                            glow: 'rgba(59, 130, 246, 0.15)',
+                            glowGreen: 'rgba(16, 185, 129, 0.15)',
+                            glowPurple: 'rgba(139, 92, 246, 0.15)',
+                            glowPink: 'rgba(236, 72, 153, 0.15)',
+                            glowOrange: 'rgba(245, 158, 11, 0.15)'
+                        }
+                    },
+                    backdropBlur: {
+                        'xs': '2px',
+                        'sm': '8px',
+                        'md': '12px',
+                        'lg': '20px',
+                        'xl': '40px'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'progress': 'progress 2s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite',
+                        'shimmer': 'shimmer 2s infinite',
+                        'gradient-flow': 'gradientFlow 4s ease infinite'
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        progress: {
+                            '0%': { width: '0%' },
+                            '100%': { width: 'var(--progress)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateX(-10px)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        glow: {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' },
+                            '50%': { boxShadow: '0 0 40px rgba(59, 130, 246, 0.5)' }
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-500px 0' },
+                            '100%': { backgroundPosition: '500px 0' }
+                        },
+                        gradientFlow: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .page-transition { animation: fadeIn 0.5s ease-out; }
+        .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .active-status { background-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3); }
+        .paused-status { background-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3); }
+        .draft-status { background-color: #6b7280; box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.3); }
+        .hidden-page { display: none; }
+        .active-page { display: block; animation: fadeIn 0.5s ease-out; }
+        .pulse-ring { animation: pulse 2s infinite; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        
+        /* Glass Morphism Effects */
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.25); }
+        .glass-nav {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(17, 24, 39, 0.8) 100%);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+        .glass-sidebar {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        }
+        .glass-modal {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.97) 0%, rgba(17, 24, 39, 0.95) 100%);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .glass-button {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.15) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        .glass-button:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 100%);
+            border-color: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .glass-button:hover::before { left: 100%; }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .glass-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.2);
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.6);
+        }
+        body {
+            background: linear-gradient(135deg, #0b0b1f 0%, #1a1a3a 50%, #2d2d5a 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .floating-element { animation: float 6s ease-in-out infinite; }
+        
+        /* 11Lab Theme Enhancements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 40%, rgba(100, 100, 255, 0.2) 0%, transparent 40%),
+                        radial-gradient(circle at 70% 60%, rgba(200, 100, 255, 0.2) 0%, transparent 40%),
+                        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glass-card, .glass-nav, .glass-sidebar {
+            border-color: rgba(160, 140, 255, 0.5);
+            box-shadow: 0 0 30px rgba(140, 120, 255, 0.3);
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(30, 20, 60, 0.7) 0%, rgba(20, 10, 50, 0.5) 100%);
+        }
+        .profile-logo {
+            background: linear-gradient(135deg, #8a6de9, #c084fc);
+            box-shadow: 0 0 20px #a78bfa;
+        }
+        .robot-eye, .robot-mouth {
+            background: #a78bfa;
+            box-shadow: 0 0 10px #a78bfa;
+        }
+        .text-cyan-200 { color: #b9d9ff !important; }
+        .text-cyan-300 { color: #9bb9ff !important; }
+        .border-cyan-700 { border-color: #4c3b7a !important; }
+        .border-cyan-800 { border-color: #3a2b60 !important; }
+        .bg-cyan-500\/20 { background-color: rgba(160, 140, 255, 0.2); }
+        
+        /* Status badges */
+        .status-success { background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #10b981; }
+        .status-warning { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #f59e0b; }
+        .status-error { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #ef4444; }
+        .status-info { background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #3b82f6; }
+        
+        .progress-container { background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; height: 8px; }
+        .progress-bar-inner { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #8a6de9, #c084fc); box-shadow: 0 0 10px #a78bfa; transition: width 0.3s ease; }
+        
+        /* Robot Logo */
+        .robot-logo {
+            position: relative; width: 40px; height: 40px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        .robot-head { width: 22px; height: 22px; background: #0f172a; border-radius: 6px; position: relative; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3); }
+        .robot-eye { position: absolute; width: 5px; height: 5px; background: linear-gradient(135deg, #a78bfa, #c084fc); border-radius: 50%; top: 5px; box-shadow: 0 0 8px #a78bfa; }
+        .robot-eye-left { left: 4px; }
+        .robot-eye-right { right: 4px; }
+        .robot-mouth { position: absolute; width: 12px; height: 3px; background: linear-gradient(90deg, #a78bfa, #c084fc); border-radius: 2px; bottom: 4px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 6px #a78bfa; }
+        
+        .profile-logo { width: 44px; height: 44px; background: linear-gradient(135deg, #8a6de9, #c084fc); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 18px; box-shadow: 0 4px 20px rgba(138, 109, 233, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.3); }
+        
+        @media (max-width: 768px) { .main-content { padding-bottom: 80px; } .dashboard-stats { grid-template-columns: repeat(2, 1fr); } .campaign-grid { grid-template-columns: 1fr; } .chart-container { height: 250px; } }
+        @media (max-width: 640px) { .dashboard-stats { grid-template-columns: 1fr; } .glass-card { padding: 1rem; } .text-2xl { font-size: 1.5rem; } .text-3xl { font-size: 1.75rem; } }
+        
+        .glass-card-hover { transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .glass-card-hover::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent); transition: 0.5s; }
+        .glass-card-hover:hover::before { left: 100%; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #a78bfa; border-radius: 4px; box-shadow: inset 0 0 6px rgba(160, 140, 255, 0.5); }
+        ::-webkit-scrollbar-thumb:hover { background: #c084fc; }
+
+        /* Additional styles for new pages */
+        .keyword-tag { background: rgba(138, 109, 233, 0.2); border: 1px solid rgba(138, 109, 233, 0.4); color: #c4b5fd; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin: 2px; display: inline-block; font-weight: 600; }
+        .escalation-badge { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+        .keyword-highlight { background: rgba(245, 158, 11, 0.3); padding: 2px 4px; border-radius: 4px; margin: 0 1px; border: 1px solid rgba(245, 158, 11, 0.5); color: #fde68a; }
+        .gst-breakdown { background: linear-gradient(135deg, rgba(138, 109, 233, 0.1) 0%, rgba(192, 132, 252, 0.08) 100%); border: 1px solid rgba(138, 109, 233, 0.2); border-radius: 12px; }
+        .invoice-paper { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); color: #1f2937; border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); position: relative; overflow: hidden; }
+        .invoice-paper::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #8a6de9, #c084fc); }
+        .settings-toggle { position: relative; display: inline-block; width: 60px; height: 30px; }
+        .settings-toggle input { opacity: 0; width: 0; height: 0; }
+        .settings-toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255, 255, 255, 0.1); transition: .4s; border-radius: 34px; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .settings-toggle-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 3px; background-color: #ffffff; transition: .4s; border-radius: 50%; }
+        .settings-toggle input:checked + .settings-toggle-slider { background: linear-gradient(135deg, #8a6de9, #c084fc); border-color: rgba(138, 109, 233, 0.5); }
+        .settings-toggle input:checked + .settings-toggle-slider:before { transform: translateX(28px); }
+        .api-key-display { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 0.875rem; color: #c4b5fd; word-break: break-all; }
+        .danger-zone { background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1.5rem; }
+        .danger-button { background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.2) 100%); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: all 0.3s ease; }
+        .integration-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: space-between; transition: all 0.3s ease; }
+        .integration-connected { background: rgba(138, 109, 233, 0.1); border-color: rgba(138, 109, 233, 0.3); }
+        .import-section { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .step-number { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8a6de9, #c084fc); display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 1rem; flex-shrink: 0; }
+        .template-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.25rem; }
+        .template-stats { display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .template-badge { position: absolute; top: 1rem; right: 1rem; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: 600; }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Background decorative elements - 11Lab theme -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-10 left-10 w-80 h-80 bg-gradient-to-r from-purple-700/40 to-indigo-600/40 rounded-full mix-blend-multiply filter blur-3xl opacity-30 floating-element"></div>
+        <div class="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-r from-blue-700/40 to-violet-600/40 rounded-full mix-blend-multiply filter blur-3xl opacity-30 floating-element" style="animation-delay: -3s;"></div>
+        <div class="absolute top-1/2 left-1/3 w-80 h-80 bg-gradient-to-r from-indigo-700/40 to-purple-700/40 rounded-full mix-blend-multiply filter blur-3xl opacity-30 floating-element" style="animation-delay: -6s;"></div>
+        <div class="absolute inset-0" style="background-image: radial-gradient(at 40% 20%, rgba(138, 109, 233, 0.15) 0px, transparent 50%), radial-gradient(at 80% 0%, rgba(192, 132, 252, 0.2) 0px, transparent 50%), radial-gradient(at 0% 50%, rgba(160, 140, 255, 0.15) 0px, transparent 50%);"></div>
+    </div>
+
+    <!-- LOGIN PAGE -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-4 page-transition relative">
+        <div class="absolute inset-0 backdrop-blur-xl" style="background: rgba(10, 5, 30, 0.7)"></div>
+        <div class="w-full max-w-md relative z-10">
+            <div class="glass-card rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 glass-card-hover">
+                <div class="flex flex-col items-center mb-8">
+                    <div class="robot-logo mb-4 transform hover:scale-105 transition-transform duration-300">
+                        <div class="robot-head"><div class="robot-eye robot-eye-left"></div><div class="robot-eye robot-eye-right"></div><div class="robot-mouth"></div></div>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">ArrcForce AI</h1>
+                    <p class="text-cyan-300 mt-2">11Lab Intelligence</p>
+                </div>
+                <form id="loginForm" class="space-y-6">
+                    <div><label class="block text-sm font-medium text-cyan-200 mb-2">Email Address</label><input type="email" id="email" required class="w-full px-4 py-3 glass-input rounded-lg focus:outline-none" placeholder="Enter your email"></div>
+                    <div><label class="block text-sm font-medium text-cyan-200 mb-2">Password</label><input type="password" id="password" required class="w-full px-4 py-3 glass-input rounded-lg focus:outline-none" placeholder="Enter your password"></div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center"><input type="checkbox" id="remember" class="h-4 w-4 rounded glass-input"><label for="remember" class="ml-2 text-sm text-cyan-200">Remember me</label></div>
+                        <a href="#" class="text-sm text-cyan-300 hover:text-cyan-200">Forgot password?</a>
+                    </div>
+                    <button type="submit" class="w-full glass-button py-3 rounded-lg font-medium text-white transition-all duration-300 transform hover:-translate-y-0.5">Sign In</button>
+                    <div class="text-center"><p class="text-cyan-200 text-sm">Demo: admin@example.com / password123</p></div>
+                </form>
+                <div class="mt-6 pt-6 border-t border-cyan-700"><p class="text-center text-cyan-200 text-sm">Don't have an account? <a href="#" class="text-cyan-300 hover:text-cyan-200 font-medium">Contact Sales</a></p></div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mt-6 hover:shadow-3xl transition-all duration-300 glass-card-hover">
+                <h3 class="font-bold text-white mb-4 text-center">Why ArrcForce AI?</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center p-3 rounded-lg hover:bg-white/5"><div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-cyan-500/20 border border-cyan-500/30"><i class="fas fa-robot text-cyan-300"></i></div><span class="text-cyan-100">AI-Powered Sales Agents</span></div>
+                    <div class="flex items-center p-3 rounded-lg hover:bg-white/5"><div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-cyan-500/20 border border-cyan-500/30"><i class="fas fa-chart-line text-cyan-300"></i></div><span class="text-cyan-100">Real-time Analytics</span></div>
+                    <div class="flex items-center p-3 rounded-lg hover:bg-white/5"><div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 bg-cyan-500/20 border border-cyan-500/30"><i class="fas fa-phone-alt text-cyan-300"></i></div><span class="text-cyan-100">Automated Call Campaigns</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION -->
+    <div id="main-app" class="hidden">
+        <!-- Navigation -->
+        <nav class="glass-nav px-4 py-3 relative">
+            <div class="flex items-center justify-between w-full mx-auto">
+                <div class="flex items-center space-x-3">
+                    <div class="robot-logo transform hover:scale-105 transition-transform duration-300"><div class="robot-head"><div class="robot-eye robot-eye-left"></div><div class="robot-eye robot-eye-right"></div><div class="robot-mouth"></div></div></div>
+                    <span class="text-xl font-bold text-white">ArrcForce AI</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="logout()" class="hidden md:flex items-center space-x-2 px-4 py-2 glass-button rounded-lg text-sm transform hover:-translate-y-0.5"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+                    <div class="flex items-center space-x-3">
+                        <div class="relative group">
+                            <div class="flex items-center space-x-2 cursor-pointer" onclick="toggleUserMenu()">
+                                <div class="profile-logo transform hover:scale-105 transition-transform duration-300"><span>RK</span></div>
+                                <span class="hidden md:block text-white">Rajesh Kumar</span>
+                                <i class="fas fa-chevron-down text-cyan-200 transition-transform duration-300 group-hover:rotate-180"></i>
+                            </div>
+                            <div id="userMenu" class="absolute right-0 mt-2 w-56 glass-card rounded-lg shadow-2xl hidden z-50 border border-cyan-700">
+                                <div class="p-4 border-b border-cyan-700"><p class="font-semibold text-white">Rajesh Kumar</p><p class="text-sm text-cyan-200 mt-1">admin@example.com</p></div>
+                                <div class="p-2"><a href="#" class="flex items-center px-3 py-2.5 text-cyan-100 hover:bg-white/10 rounded-lg"><i class="fas fa-user mr-3"></i> Profile</a><a href="#" onclick="showPage('settings')" class="flex items-center px-3 py-2.5 text-cyan-100 hover:bg-white/10 rounded-lg"><i class="fas fa-cog mr-3"></i> Settings</a><a href="#" onclick="logout()" class="flex items-center px-3 py-2.5 text-red-400 hover:bg-white/10 rounded-lg"><i class="fas fa-sign-out-alt mr-3"></i> Logout</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex w-full mx-auto relative main-content">
+            <!-- Sidebar -->
+            <aside class="hidden md:block w-64 glass-sidebar min-h-screen">
+                <nav class="p-4">
+                    <div class="mb-8">
+                        <h2 class="text-xs font-semibold text-cyan-300 uppercase tracking-wider mb-4 px-2">Main</h2>
+                        <ul class="space-y-1">
+                            <li><a href="#" onclick="showPage('dashboard')" class="sidebar-link flex items-center space-x-3 px-3 py-3 rounded-lg text-cyan-100 hover:bg-white/10"><i class="fas fa-chart-line w-5"></i><span>Dashboard</span></a></li>
+                            <li><a href="#" onclick="showPage('campaigns')" class="sidebar-link active flex items-center space-x-3 px-3 py-3 rounded-lg text-white"><i class="fas fa-bullhorn w-5"></i><span>Campaigns</span></a></li>
+                            <li><a href="#" onclick="showPage('live-calls')" class="sidebar-link flex items-center space-x-3 px-3 py-3 rounded-lg text-cyan-100 hover:bg-white/10"><i class="fas fa-phone-alt w-5"></i><span>Live Calls</span></a></li>
+                            <li><a href="#" onclick="showPage('analytics')" class="sidebar-link flex items-center space-x-3 px-3 py-3 rounded-lg text-cyan-100 hover:bg-white/10"><i class="fas fa-chart-pie w-5"></i><span>Analytics</span></a></li>
+                            <li><a href="#" onclick="showPage('payments')" class="sidebar-link flex items-center space-x-3 px-3 py-3 rounded-lg text-cyan-100 hover:bg-white/10"><i class="fas fa-wallet w-5"></i><span>Payments</span></a></li>
+                            <li><a href="#" onclick="showPage('settings')" class="sidebar-link flex items-center space-x-3 px-3 py-3 rounded-lg text-cyan-100 hover:bg-white/10"><i class="fas fa-cog w-5"></i><span>Settings</span></a></li>
+                        </ul>
+                    </div>
+                    <div><h2 class="text-xs font-semibold text-cyan-300 uppercase tracking-wider mb-4 px-2">Quick Actions</h2><ul class="space-y-2"><li><button onclick="showCampaignModal()" class="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg glass-button text-white transform hover:-translate-y-0.5"><i class="fas fa-plus"></i><span>New Campaign</span></button></li><li><a href="#" onclick="showPage('import-leads')" class="sidebar-link flex items-center space-x-3 px-3 py-3 rounded-lg text-cyan-100 hover:bg-white/10"><i class="fas fa-download w-5"></i><span>Import Leads</span></a></li><li><a href="#" onclick="showPage('templates')" class="sidebar-link flex items-center space-x-3 px-3 py-3 rounded-lg text-cyan-100 hover:bg-white/10"><i class="fas fa-copy w-5"></i><span>Templates</span></a></li></ul></div>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 p-4 w-full">
+                <!-- DASHBOARD PAGE -->
+                <div id="dashboard-page" class="hidden-page page-transition">
+                    <div class="p-4 md:p-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+                            <div class="mb-4 md:mb-0"><h1 class="text-2xl font-bold text-white">Dashboard</h1><p class="text-cyan-200">Overview of your AI sales performance</p></div>
+                            <div class="flex items-center space-x-3"><button onclick="logout()" class="md:hidden flex items-center space-x-2 px-3 py-2 glass-button rounded-lg text-sm"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button><div class="relative"><input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 glass-input rounded-lg focus:outline-none w-full"><i class="fas fa-search absolute left-3 top-3 text-cyan-300"></i></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 dashboard-stats">
+                            <div class="glass-card p-5 rounded-xl hover:shadow-2xl transition-all duration-300 glass-card-hover"><div class="flex items-center justify-between mb-3"><div><p class="text-sm text-cyan-200">Total Calls</p><p class="text-2xl font-bold text-white mt-1">1,248</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, rgba(138,109,233,0.3) 0%, rgba(138,109,233,0.15) 100%); border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-phone text-cyan-300 text-xl"></i></div></div><div class="mt-4 pt-4 border-t border-cyan-700"><p class="text-xs text-cyan-200"><span class="text-green-400 font-medium">↑ 12%</span> from last week</p></div></div>
+                            <div class="glass-card p-5 rounded-xl hover:shadow-2xl transition-all duration-300 glass-card-hover"><div class="flex items-center justify-between mb-3"><div><p class="text-sm text-cyan-200">Revenue Generated</p><p class="text-2xl font-bold text-white mt-1">₹2,48,750</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, rgba(192,132,252,0.3) 0%, rgba(192,132,252,0.15) 100%); border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-rupee-sign text-cyan-300 text-xl"></i></div></div><div class="mt-4 pt-4 border-t border-cyan-700"><p class="text-xs text-cyan-200"><span class="text-green-400 font-medium">↑ 24%</span> from last month</p></div></div>
+                            <div class="glass-card p-5 rounded-xl hover:shadow-2xl transition-all duration-300 glass-card-hover"><div class="flex items-center justify-between mb-3"><div><p class="text-sm text-cyan-200">WhatsApp Today</p><p class="text-2xl font-bold text-white mt-1">124</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, rgba(160,140,255,0.3) 0%, rgba(160,140,255,0.15) 100%); border:1px solid rgba(160,140,255,0.4)"><i class="fab fa-whatsapp text-cyan-300 text-xl"></i></div></div><div class="mt-4 pt-4 border-t border-cyan-700"><p class="text-xs text-cyan-200"><span class="text-green-400 font-medium">↑ 18%</span> from yesterday</p></div></div>
+                            <div class="glass-card p-5 rounded-xl hover:shadow-2xl transition-all duration-300 glass-card-hover"><div class="flex items-center justify-between mb-3"><div><p class="text-sm text-cyan-200">Customer Satisfaction</p><div class="flex items-center mt-1"><p class="text-2xl font-bold text-white mr-2">4.3</p><div class="flex"><i class="fas fa-star text-yellow-400 text-sm"></i><i class="fas fa-star text-yellow-400 text-sm"></i><i class="fas fa-star text-yellow-400 text-sm"></i><i class="fas fa-star text-yellow-400 text-sm"></i><i class="fas fa-star text-gray-600 text-sm"></i></div></div></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, rgba(180,150,255,0.3) 0%, rgba(180,150,255,0.15) 100%); border:1px solid rgba(180,150,255,0.4)"><i class="fas fa-star text-cyan-300 text-xl"></i></div></div><div class="mt-4 pt-4 border-t border-cyan-700"><div class="progress-container"><div class="progress-bar-inner" style="width:86%"></div></div><p class="text-xs text-cyan-200 mt-2">86% satisfaction rate</p></div></div>
+                        </div>
+                        <div class="mb-6"><div class="flex items-center justify-between mb-4"><h2 class="font-semibold text-white text-xl">AI Companion Status</h2><button onclick="refreshAIStatus()" class="text-sm text-cyan-300 hover:text-cyan-200 flex items-center"><i class="fas fa-sync-alt mr-1"></i> Refresh</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="glass-card p-5 rounded-xl hover:shadow-2xl glass-card-hover"><div class="flex items-center justify-between mb-4"><div class="flex items-center"><div class="relative"><div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(138,109,233,0.3) 0%, rgba(138,109,233,0.15)100%);border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-robot text-cyan-300"></i></div><div class="status-dot active-status" style="background-color:#10b981; position:absolute; top:0; right:10px;"></div></div><div><h3 class="font-bold text-white">SalesBot v2.1</h3><p class="text-sm text-cyan-200">Cold Calling Specialist</p></div></div><span class="text-xs px-2 py-1 rounded-full status-success">🟢 Idle</span></div><div class="text-sm text-cyan-200"><div class="flex justify-between mb-1"><span>Last Active:</span><span class="text-white">2 min ago</span></div><div class="flex justify-between"><span>Calls Today:</span><span class="text-white">47</span></div></div></div><div class="glass-card p-5 rounded-xl hover:shadow-2xl glass-card-hover"><div class="flex items-center justify-between mb-4"><div class="flex items-center"><div class="relative"><div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(192,132,252,0.3) 0%, rgba(192,132,252,0.15)100%);border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-robot text-cyan-300"></i></div><div class="status-dot active-status" style="background-color:#ef4444; position:absolute; top:0; right:10px;"></div></div><div><h3 class="font-bold text-white">ConnectBot v1.8</h3><p class="text-sm text-cyan-200">Follow-up Specialist</p></div></div><span class="text-xs px-2 py-1 rounded-full status-error">🔴 Busy</span></div><div class="text-sm text-cyan-200"><div class="flex justify-between mb-1"><span>Last Active:</span><span class="text-white">Now</span></div><div class="flex justify-between"><span>Current Call:</span><span class="text-white">4:32 min</span></div></div></div><div class="glass-card p-5 rounded-xl hover:shadow-2xl glass-card-hover"><div class="flex items-center justify-between mb-4"><div class="flex items-center"><div class="relative"><div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(160,140,255,0.3) 0%, rgba(160,140,255,0.15)100%);border:1px solid rgba(160,140,255,0.4)"><i class="fas fa-robot text-cyan-300"></i></div><div class="status-dot active-status" style="background-color:#6b7280; position:absolute; top:0; right:10px;"></div></div><div><h3 class="font-bold text-white">GrowthBot v3.2</h3><p class="text-sm text-cyan-200">Upsell Specialist</p></div></div><span class="text-xs px-2 py-1 rounded-full" style="background:rgba(107,114,128,0.2); color:#9ca3af;">⚫ Offline</span></div><div class="text-sm text-cyan-200"><div class="flex justify-between mb-1"><span>Last Active:</span><span class="text-white">1 hour ago</span></div><div class="flex justify-between"><span>Status:</span><span class="text-white">Maintenance</span></div></div></div></div></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"><div class="lg:col-span-2"><div class="glass-card p-6 rounded-xl hover:shadow-2xl mb-6 glass-card-hover"><div class="text-center"><h3 class="text-xl font-bold text-white mb-3">Start a New Campaign</h3><p class="text-cyan-200 mb-6">Launch your AI sales team in under 2 minutes</p><button onclick="showCampaignModal()" class="glass-button px-8 py-3 rounded-lg font-medium text-lg transform hover:-translate-y-0.5">Create Campaign</button></div></div><div class="glass-card p-6 rounded-xl hover:shadow-2xl glass-card-hover"><h3 class="font-bold text-white mb-4">Recent Campaigns</h3><div class="overflow-x-auto"><table class="w-full min-w-full"><thead><tr class="border-b border-cyan-700"><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Campaign</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Leads</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Calls</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Status</th></tr></thead><tbody><tr class="border-b border-cyan-800 hover:bg-white/5"><td class="py-3 px-4 text-white font-medium">Q4 SaaS Sales</td><td class="py-3 px-4 text-cyan-100">248</td><td class="py-3 px-4 text-cyan-100">127</td><td class="py-3 px-4"><span class="status-success px-3 py-1">Active</span></td></tr><tr class="border-b border-cyan-800 hover:bg-white/5"><td class="py-3 px-4 text-white font-medium">Enterprise Upsell</td><td class="py-3 px-4 text-cyan-100">156</td><td class="py-3 px-4 text-cyan-100">89</td><td class="py-3 px-4"><span class="status-success px-3 py-1">Active</span></td></tr><tr class="hover:bg-white/5"><td class="py-3 px-4 text-white font-medium">Product Demo</td><td class="py-3 px-4 text-cyan-100">98</td><td class="py-3 px-4 text-cyan-100">72</td><td class="py-3 px-4"><span class="status-info px-3 py-1">Completed</span></td></tr></tbody></table></div><div class="mt-4 pt-4 border-t border-cyan-700 text-center"><button onclick="showPage('all-campaigns')" class="text-cyan-300 hover:text-cyan-200 font-medium">View All →</button></div></div></div><div class="lg:col-span-1"><div class="glass-card p-6 rounded-xl hover:shadow-2xl glass-card-hover"><h3 class="font-bold text-white mb-4">Live Calls</h3><div class="space-y-4"><div class="flex items-center p-3 rounded-lg hover:bg-white/5" style="background:rgba(138,109,233,0.1); border-left:4px solid #8a6de9"><div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(138,109,233,0.3) 0%, rgba(138,109,233,0.15)100%);"><span class="text-cyan-300 font-bold">AP</span></div><div class="flex-1"><div class="font-medium text-white">Amit Patel</div><div class="text-sm text-cyan-200">TechCorp</div><div class="flex items-center justify-between mt-1"><span class="text-xs text-cyan-300">12:45</span><span class="text-xs text-green-400 bg-green-500/20 px-2 py-1 rounded-full">Positive</span></div></div></div><div class="flex items-center p-3 rounded-lg hover:bg-white/5" style="background:rgba(192,132,252,0.1); border-left:4px solid #c084fc"><div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(192,132,252,0.3) 0%, rgba(192,132,252,0.15)100%);"><span class="text-cyan-300 font-bold">SM</span></div><div class="flex-1"><div class="font-medium text-white">Sneha Mehta</div><div class="text-sm text-cyan-200">FinTech</div><div class="flex items-center justify-between mt-1"><span class="text-xs text-cyan-300">08:32</span><span class="text-xs text-orange-400 bg-orange-500/20 px-2 py-1 rounded-full">Negotiating</span></div></div></div><div class="flex items-center p-3 rounded-lg hover:bg-white/5" style="background:rgba(160,140,255,0.1); border-left:4px solid #a09cff"><div class="w-10 h-10 rounded-full flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(160,140,255,0.3) 0%, rgba(160,140,255,0.15)100%);"><span class="text-cyan-300 font-bold">RK</span></div><div class="flex-1"><div class="font-medium text-white">Rohit Kumar</div><div class="text-sm text-cyan-200">StartUp</div><div class="flex items-center justify-between mt-1"><span class="text-xs text-cyan-300">05:18</span><span class="text-xs text-gray-400 bg-gray-500/20 px-2 py-1 rounded-full">Cold</span></div></div></div></div></div><div class="mt-6 glass-card p-6 rounded-xl hover:shadow-2xl glass-card-hover"><h3 class="font-bold text-white mb-4">Performance</h3><div class="grid grid-cols-2 gap-4"><div class="text-center p-3 rounded-lg hover:bg-white/5" style="background:rgba(138,109,233,0.1)"><div class="text-xl font-bold text-white mb-1">85%</div><div class="text-xs text-cyan-200">Success</div></div><div class="text-center p-3 rounded-lg hover:bg-white/5" style="background:rgba(192,132,252,0.1)"><div class="text-xl font-bold text-white mb-1">₹1.2L</div><div class="text-xs text-cyan-200">Deal Size</div></div><div class="text-center p-3 rounded-lg hover:bg-white/5" style="background:rgba(160,140,255,0.1)"><div class="text-xl font-bold text-white mb-1">4.2</div><div class="text-xs text-cyan-200">Duration</div></div><div class="text-center p-3 rounded-lg hover:bg-white/5" style="background:rgba(180,150,255,0.1)"><div class="text-xl font-bold text-white mb-1">2</div><div class="text-xs text-cyan-200">AI Live</div></div></div></div></div></div>
+                    </div>
+                </div>
+
+                <!-- CAMPAIGNS PAGE -->
+                <div id="campaigns-page" class="active-page page-transition">
+                    <div class="p-4 md:p-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+                            <div class="mb-4 md:mb-0"><h1 class="text-2xl font-bold text-white">Campaigns</h1><p class="text-cyan-200">Manage your AI sales campaigns</p></div>
+                            <div class="flex items-center space-x-3"><button onclick="logout()" class="md:hidden flex items-center space-x-2 px-3 py-2 glass-button rounded-lg text-sm"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button><div class="relative"><input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 glass-input rounded-lg focus:outline-none"><i class="fas fa-search absolute left-3 top-3 text-cyan-300"></i></div><button onclick="showCampaignModal()" class="glass-button px-4 py-2 rounded-lg flex items-center space-x-2"><i class="fas fa-plus"></i><span>New</span></button></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="glass-card p-4 rounded-xl hover:shadow-2xl glass-card-hover"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Active</p><p class="text-2xl font-bold text-white mt-1">3</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(16,185,129,0.3)0%,rgba(16,185,129,0.15)100%);border:1px solid rgba(16,185,129,0.4)"><i class="fas fa-play text-green-400 text-xl"></i></div></div></div>
+                            <div class="glass-card p-4 rounded-xl hover:shadow-2xl glass-card-hover"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Leads</p><p class="text-2xl font-bold text-white mt-1">1,842</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%);border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-users text-cyan-300 text-xl"></i></div></div></div>
+                            <div class="glass-card p-4 rounded-xl hover:shadow-2xl glass-card-hover"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Revenue</p><p class="text-2xl font-bold text-white mt-1">₹4.2L</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%);border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-rupee-sign text-cyan-300 text-xl"></i></div></div></div>
+                        </div>
+                        <div class="mb-6"><div class="flex items-center justify-between mb-4"><h2 class="font-semibold text-white">Active Campaigns</h2><a href="#" onclick="showPage('all-campaigns')" class="text-sm text-cyan-300 hover:text-cyan-200">View All →</a></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 campaign-grid"><div class="glass-card rounded-xl overflow-hidden hover:shadow-2xl glass-card-hover p-5"><div class="flex items-start justify-between mb-4"><div><div class="flex items-center space-x-2 mb-2"><span class="status-dot active-status"></span><span class="text-sm font-medium text-green-400">Active</span></div><h3 class="font-bold text-white text-lg">Q4 SaaS Sales</h3><p class="text-cyan-200 text-sm">Enterprise SaaS</p></div></div><div class="grid grid-cols-3 gap-2 mb-4"><div class="text-center p-2 rounded-lg hover:bg-white/5" style="background:rgba(138,109,233,0.1)"><div class="font-bold text-white">248</div><div class="text-xs text-cyan-200">Leads</div></div><div class="text-center p-2 rounded-lg hover:bg-white/5" style="background:rgba(192,132,252,0.1)"><div class="font-bold text-white">127</div><div class="text-xs text-cyan-200">Calls</div></div><div class="text-center p-2 rounded-lg hover:bg-white/5" style="background:rgba(160,140,255,0.1)"><div class="font-bold text-white">₹85K</div><div class="text-xs text-cyan-200">Revenue</div></div></div><div class="flex space-x-2"><button class="flex-1 glass-button py-2 rounded-lg text-sm font-medium">View</button></div></div><div class="glass-card rounded-xl overflow-hidden hover:shadow-2xl glass-card-hover p-5"><div class="flex items-start justify-between mb-4"><div><div class="flex items-center space-x-2 mb-2"><span class="status-dot active-status"></span><span class="text-sm font-medium text-green-400">Active</span></div><h3 class="font-bold text-white text-lg">Enterprise Upsell</h3><p class="text-cyan-200 text-sm">Existing customers</p></div></div><div class="grid grid-cols-3 gap-2 mb-4"><div class="text-center p-2 rounded-lg hover:bg-white/5" style="background:rgba(138,109,233,0.1)"><div class="font-bold text-white">156</div><div class="text-xs text-cyan-200">Leads</div></div><div class="text-center p-2 rounded-lg hover:bg-white/5" style="background:rgba(192,132,252,0.1)"><div class="font-bold text-white">89</div><div class="text-xs text-cyan-200">Calls</div></div><div class="text-center p-2 rounded-lg hover:bg-white/5" style="background:rgba(160,140,255,0.1)"><div class="font-bold text-white">₹1.2L</div><div class="text-xs text-cyan-200">Revenue</div></div></div><div class="flex space-x-2"><button class="flex-1 glass-button py-2 rounded-lg text-sm font-medium">View</button></div></div></div></div>
+                    </div>
+                </div>
+
+                <!-- LIVE CALLS PAGE (Fully functional) -->
+                <div id="live-calls-page" class="hidden-page page-transition">
+                    <div class="p-4 md:p-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+                            <div><h1 class="text-2xl font-bold text-white">Live Calls</h1><p class="text-cyan-200">Monitor ongoing AI conversations</p></div>
+                            <div class="flex items-center space-x-3"><button onclick="logout()" class="md:hidden glass-button px-3 py-2 rounded-lg text-sm"><i class="fas fa-sign-out-alt mr-1"></i>Logout</button><div class="relative"><input type="text" placeholder="Search calls..." class="pl-10 pr-4 py-2 glass-input rounded-lg"><i class="fas fa-search absolute left-3 top-3 text-cyan-300"></i></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Live Calls</p><p class="text-2xl font-bold text-white mt-1">3</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(16,185,129,0.3)0%,rgba(16,185,129,0.15)100%);border:1px solid rgba(16,185,129,0.4)"><i class="fas fa-phone-alt text-green-400 text-xl"></i></div></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Call Duration</p><p class="text-2xl font-bold text-white mt-1">4.2m</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%);border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-clock text-cyan-300 text-xl"></i></div></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Today's Calls</p><p class="text-2xl font-bold text-white mt-1">42</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%);border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-calendar-day text-cyan-300 text-xl"></i></div></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Success Rate</p><p class="text-2xl font-bold text-white mt-1">85%</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(160,140,255,0.3)0%,rgba(160,140,255,0.15)100%);border:1px solid rgba(160,140,255,0.4)"><i class="fas fa-chart-line text-cyan-300 text-xl"></i></div></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                            <!-- Real-time Transcription -->
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Real-time Transcription</h3><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%);border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-comment-dots text-cyan-300"></i></div></div><div class="mb-4"><div class="glass-input rounded-lg p-4 h-48 overflow-y-auto" style="background:rgba(0,0,0,0.2)"><div class="text-right mb-3"><div class="inline-block bg-blue-500/30 text-white p-3 rounded-lg max-w-xs ml-auto"><p class="text-sm">Hello, this is SalesBot...</p><span class="text-xs text-gray-300 block mt-1">AI Agent</span></div></div><div class="text-left mb-3"><div class="inline-block bg-gray-700/50 text-white p-3 rounded-lg max-w-xs"><p class="text-sm">I'm good, thanks.</p><span class="text-xs text-gray-300 block mt-1">Customer</span></div></div></div></div></div>
+                            <!-- Keyword Detection -->
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Keyword Detection</h3><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%);border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-key text-cyan-300"></i></div></div><div class="mb-4"><div class="flex flex-wrap gap-2"><span class="keyword-tag">interested</span><span class="keyword-tag">pricing</span><span class="keyword-tag keyword-highlight">demo</span><span class="keyword-tag">budget</span><span class="keyword-tag">decision-maker</span><span class="keyword-tag">objection</span></div></div></div>
+                            <!-- Sentiment Analysis -->
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Sentiment Analysis</h3><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(160,140,255,0.3)0%,rgba(160,140,255,0.15)100%);border:1px solid rgba(160,140,255,0.4)"><i class="fas fa-smile text-cyan-300"></i></div></div><div class="text-center mb-6"><div class="text-4xl font-bold text-white mb-2">78%</div><div class="text-sm text-gray-400">Positive</div></div><div class="progress-container mb-4"><div class="progress-bar-inner" style="width:78%"></div></div></div>
+                        </div>
+                        <div class="glass-card p-6 rounded-xl mb-6"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Current Live Calls</h3><button onclick="refreshCalls()" class="text-sm text-cyan-300 hover:text-cyan-200"><i class="fas fa-sync-alt mr-1"></i>Refresh</button></div><div class="space-y-4"><div class="glass-card p-4 rounded-xl border-2" style="border-color:rgba(16,185,129,0.4)"><div class="flex flex-col md:flex-row justify-between"><div class="flex items-center"><div class="relative mr-4"><div class="w-12 h-12 rounded-full flex items-center justify-center" style="background:linear-gradient(135deg, rgba(16,185,129,0.3)0%,rgba(16,185,129,0.15)100%)"><span class="text-green-400 font-bold">AP</span></div><div class="pulse-ring absolute inset-0 rounded-full border-2 border-green-500"></div></div><div><div class="font-bold text-white">Amit Patel</div><div class="text-sm text-gray-400">TechCorp</div><div class="flex items-center mt-1"><span class="text-xs text-green-400 bg-green-500/20 px-2 py-1 rounded-full mr-2">Active</span><span class="text-xs text-gray-500">04:32</span></div></div></div><div class="flex items-center space-x-2 mt-2 md:mt-0"><span class="text-xs text-gray-400 mr-2">Agent: SalesBot</span><div class="escalation-badge"><i class="fas fa-exclamation-triangle mr-1"></i>Escalate</div><button onclick="listenToCall(1)" class="glass-button px-3 py-1.5 rounded-lg text-sm"><i class="fas fa-headphones"></i></button><button class="glass-button px-3 py-1.5 rounded-lg text-sm" style="background:rgba(239,68,68,0.3)"><i class="fas fa-user-shield"></i></button></div></div><div class="mt-4 pt-4 border-t border-gray-700"><div class="flex justify-between text-xs text-gray-400 mb-1"><span>Progress</span><span>65%</span></div><div class="progress-container"><div class="progress-bar-inner" style="width:65%"></div></div></div></div></div></div>
+                        <div class="glass-card p-6 rounded-xl"><h3 class="font-bold text-white mb-4">Call History</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr class="border-b border-cyan-700"><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Contact</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Duration</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Agent</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Sentiment</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Outcome</th></tr></thead><tbody><tr class="border-b border-cyan-800 hover:bg-white/5"><td class="py-3 px-4"><div class="font-medium text-white">Priya Sharma</div><div class="text-xs text-gray-400">EduTech</div></td><td class="py-3 px-4 text-gray-300">03:45</td><td class="py-3 px-4"><span>SalesBot</span></td><td class="py-3 px-4"><i class="fas fa-smile text-green-400 mr-2"></i>Positive</td><td class="py-3 px-4"><span class="status-success px-3 py-1">Demo</span></td></tr><tr class="border-b border-cyan-800 hover:bg-white/5"><td class="py-3 px-4"><div class="font-medium text-white">Anil Gupta</div><div class="text-xs text-gray-400">Retail</div></td><td class="py-3 px-4 text-gray-300">02:18</td><td class="py-3 px-4"><span>ConnectBot</span></td><td class="py-3 px-4"><i class="fas fa-meh text-orange-400 mr-2"></i>Neutral</td><td class="py-3 px-4"><span class="status-info px-3 py-1">Follow-up</span></td></tr></tbody></table></div></div>
+                    </div>
+                </div>
+
+                <!-- ANALYTICS PAGE -->
+                <div id="analytics-page" class="hidden-page page-transition">
+                    <div class="p-4 md:p-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+                            <div><h1 class="text-2xl font-bold text-white">Analytics</h1><p class="text-cyan-200">Detailed insights and metrics</p></div>
+                            <div class="flex items-center space-x-3"><button onclick="logout()" class="md:hidden glass-button px-3 py-2 rounded-lg text-sm">Logout</button><div class="relative"><input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 glass-input rounded-lg"><i class="fas fa-search absolute left-3 top-3 text-cyan-300"></i></div><select class="glass-input px-3 py-2 rounded-lg"><option>Last 7 days</option><option>Last 30 days</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Total Calls</p><p class="text-2xl font-bold text-white mt-1">1,248</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%);border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-phone-alt text-cyan-300 text-xl"></i></div></div><div class="mt-3"><p class="text-xs text-gray-400"><span class="text-green-400">↑12%</span> from last week</p></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Revenue</p><p class="text-2xl font-bold text-white mt-1">₹4.8L</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%);border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-rupee-sign text-cyan-300 text-xl"></i></div></div><div class="mt-3"><p class="text-xs text-gray-400"><span class="text-green-400">↑24%</span> from last month</p></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Success Rate</p><p class="text-2xl font-bold text-white mt-1">85%</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(160,140,255,0.3)0%,rgba(160,140,255,0.15)100%);border:1px solid rgba(160,140,255,0.4)"><i class="fas fa-chart-line text-cyan-300 text-xl"></i></div></div><div class="mt-3"><p class="text-xs text-gray-400"><span class="text-green-400">↑8%</span> from last quarter</p></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Avg Duration</p><p class="text-2xl font-bold text-white mt-1">4.2m</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(180,150,255,0.3)0%,rgba(180,150,255,0.15)100%);border:1px solid rgba(180,150,255,0.4)"><i class="fas fa-clock text-cyan-300 text-xl"></i></div></div><div class="mt-3"><p class="text-xs text-gray-400"><span class="text-red-400">↓3%</span> optimized</p></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Calls Performance</h3><select class="glass-input px-3 py-1 rounded-lg text-sm"><option>Weekly</option></select></div><div class="chart-container"><canvas id="callsChart"></canvas></div></div>
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Revenue Trends</h3><select class="glass-input px-3 py-1 rounded-lg text-sm"><option>Weekly</option></select></div><div class="chart-container"><canvas id="revenueChart"></canvas></div></div>
+                        </div>
+                        <div class="glass-card p-6 rounded-xl mb-6"><h3 class="font-bold text-white mb-4">Detailed Performance</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="p-4 rounded-lg" style="background:rgba(255,255,255,0.05)"><h4 class="font-semibold text-white mb-3">Conversion Metrics</h4><div class="space-y-3"><div><div class="flex justify-between text-sm text-gray-400 mb-1"><span>Lead to Call</span><span>68%</span></div><div class="progress-container"><div class="progress-bar-inner" style="width:68%"></div></div></div><div><div class="flex justify-between text-sm text-gray-400 mb-1"><span>Call to Demo</span><span>42%</span></div><div class="progress-container"><div class="progress-bar-inner" style="width:42%"></div></div></div></div></div><div class="p-4 rounded-lg" style="background:rgba(255,255,255,0.05)"><h4 class="font-semibold text-white mb-3">Agent Performance</h4><div class="space-y-3"><div><div class="flex justify-between items-center mb-1"><span class="text-sm text-gray-400">SalesBot</span><span class="text-sm font-medium text-white">92%</span></div><div class="progress-container"><div class="progress-bar-inner" style="width:92%"></div></div></div><div><div class="flex justify-between items-center mb-1"><span class="text-sm text-gray-400">ConnectBot</span><span class="text-sm font-medium text-white">85%</span></div><div class="progress-container"><div class="progress-bar-inner" style="width:85%"></div></div></div></div></div><div class="p-4 rounded-lg" style="background:rgba(255,255,255,0.05)"><h4 class="font-semibold text-white mb-3">Time Metrics</h4><div class="space-y-4"><div class="text-center"><div class="text-2xl font-bold text-white">4.2m</div><div class="text-sm text-gray-400">Avg Call</div></div><div class="text-center"><div class="text-2xl font-bold text-white">2.4</div><div class="text-sm text-gray-400">Follow-ups</div></div></div></div></div></div>
+                    </div>
+                </div>
+
+                <!-- PAYMENTS PAGE -->
+                <div id="payments-page" class="hidden-page page-transition">
+                    <div class="p-4 md:p-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+                            <div><h1 class="text-2xl font-bold text-white">Payments</h1><p class="text-cyan-200">Manage billing and invoices</p></div>
+                            <div class="flex items-center space-x-3"><button onclick="logout()" class="md:hidden glass-button px-3 py-2 rounded-lg text-sm">Logout</button><div class="relative"><input type="text" placeholder="Search invoices..." class="pl-10 pr-4 py-2 glass-input rounded-lg"><i class="fas fa-search absolute left-3 top-3 text-cyan-300"></i></div><button onclick="generateInvoice()" class="glass-button px-4 py-2 rounded-lg"><i class="fas fa-file-invoice mr-2"></i>Generate</button></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Current Balance</p><p class="text-2xl font-bold text-white mt-1">₹12,500</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%);border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-wallet text-cyan-300 text-xl"></i></div></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">This Month</p><p class="text-2xl font-bold text-white mt-1">₹8,500</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%);border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-calendar-alt text-cyan-300 text-xl"></i></div></div></div>
+                            <div class="glass-card p-4 rounded-xl"><div class="flex items-center justify-between"><div><p class="text-sm text-cyan-200">Next Due</p><p class="text-2xl font-bold text-white mt-1">15 Dec</p></div><div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(160,140,255,0.3)0%,rgba(160,140,255,0.15)100%);border:1px solid rgba(160,140,255,0.4)"><i class="fas fa-clock text-cyan-300 text-xl"></i></div></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Usage-Based Billing</h3><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%);border:1px solid rgba(138,109,233,0.4)"><i class="fas fa-calculator text-cyan-300"></i></div></div><div class="space-y-4"><div><label class="block text-sm text-gray-300 mb-2">AI Minutes Used</label><div class="flex items-center justify-between"><span class="text-2xl font-bold text-white">1,248</span><span class="text-sm text-gray-400">minutes</span></div><div class="progress-container mt-2"><div class="progress-bar-inner" style="width:62%"></div></div></div><div><div class="flex justify-between text-sm"><span class="text-gray-400">Current Charge:</span><span class="text-white font-bold">₹2,496</span></div></div></div></div>
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Invoice Generation</h3><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%);border:1px solid rgba(192,132,252,0.4)"><i class="fas fa-file-invoice-dollar text-cyan-300"></i></div></div><div class="mb-4"><select class="w-full glass-input rounded-lg px-3 py-2"><option>November 2024</option></select></div><div class="mb-4"><div class="space-y-2 text-sm"><div class="flex justify-between"><span class="text-gray-400">Invoice #:</span><span class="text-white">INV-2024-0011</span></div><div class="flex justify-between"><span class="text-gray-400">Status:</span><span class="text-orange-400">Pending</span></div></div></div><div class="flex space-x-2"><button onclick="downloadInvoice()" class="flex-1 glass-button py-2 rounded-lg text-sm">Download</button><button onclick="sendInvoice()" class="flex-1 glass-button py-2 rounded-lg text-sm">Email</button></div></div>
+                            <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">GST Calculation</h3><div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg, rgba(160,140,255,0.3)0%,rgba(160,140,255,0.15)100%);border:1px solid rgba(160,140,255,0.4)"><i class="fas fa-percentage text-cyan-300"></i></div></div><div class="gst-breakdown p-4 rounded-lg mb-4"><div class="space-y-2"><div class="flex justify-between text-sm"><span>Subtotal:</span><span>₹2,496</span></div><div class="flex justify-between text-sm"><span>CGST (9%):</span><span>₹224.64</span></div><div class="flex justify-between text-sm"><span>SGST (9%):</span><span>₹224.64</span></div><div class="pt-2 border-t border-gray-700"><div class="flex justify-between font-bold"><span>Total:</span><span>₹2,945.28</span></div></div></div></div></div>
+                        </div>
+                        <div class="glass-card p-6 rounded-xl mb-6"><h3 class="font-bold text-white mb-4">Recent Invoices</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr class="border-b border-cyan-700"><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Invoice No.</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Date</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Amount</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Status</th><th class="text-left py-3 px-4 text-sm font-medium text-cyan-200">Action</th></tr></thead><tbody><tr class="border-b border-cyan-800 hover:bg-white/5"><td class="py-3 px-4"><div class="font-medium text-white">INV-2024-0011</div></td><td class="py-3 px-4">30 Nov</td><td class="py-3 px-4 font-bold">₹2,945</td><td class="py-3 px-4"><span class="status-warning px-3 py-1">Pending</span></td><td class="py-3 px-4"><button class="text-blue-400 hover:text-blue-300"><i class="fas fa-eye"></i></button></td></tr><tr><td class="py-3 px-4"><div class="font-medium text-white">INV-2024-0010</div></td><td class="py-3 px-4">31 Oct</td><td class="py-3 px-4 font-bold">₹2,720</td><td class="py-3 px-4"><span class="status-success px-3 py-1">Paid</span></td><td class="py-3 px-4"><button class="text-blue-400 hover:text-blue-300"><i class="fas fa-download"></i></button></td></tr></tbody></table></div></div>
+                        <div class="glass-card p-6 rounded-xl"><div class="flex items-center justify-between mb-4"><h3 class="font-bold text-white">Payment Methods</h3><button onclick="showAddPaymentModal()" class="glass-button px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>Add Method</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="glass-card p-4 rounded-xl border-2 border-cyan-500/30"><div class="flex items-center justify-between mb-4"><div class="flex items-center"><div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%)"><i class="fas fa-credit-card text-cyan-300"></i></div><div><div class="font-bold text-white">Credit Card</div><div class="text-sm text-gray-400">Primary</div></div></div><span class="status-success px-2 py-1 text-xs">Default</span></div><div class="text-sm text-gray-400">Card ending in •••• 4242</div></div><div class="glass-card p-4 rounded-xl border-2 border-cyan-500/30"><div class="flex items-center justify-between mb-4"><div class="flex items-center"><div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%)"><i class="fas fa-mobile-alt text-cyan-300"></i></div><div><div class="font-bold text-white">UPI</div><div class="text-sm text-gray-400">GPay, PhonePe</div></div></div><span class="status-info px-2 py-1 text-xs">Available</span></div><div class="text-sm text-gray-400">rajesh@okaxis</div></div></div></div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS PAGE -->
+                <div id="settings-page" class="hidden-page page-transition">
+                    <div class="p-4 md:p-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+                            <div><h1 class="text-2xl font-bold text-white">Settings</h1><p class="text-cyan-200">Manage account and preferences</p></div>
+                            <div class="flex items-center space-x-3"><button onclick="logout()" class="md:hidden glass-button px-3 py-2 rounded-lg text-sm">Logout</button><div class="relative"><input type="text" placeholder="Search settings..." class="pl-10 pr-4 py-2 glass-input rounded-lg"><i class="fas fa-search absolute left-3 top-3 text-cyan-300"></i></div></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 space-y-6">
+                                <div class="settings-card"><h2 class="settings-section-title">Account Settings</h2><div class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm text-gray-300 mb-2">Full Name</label><input type="text" value="Rajesh Kumar" class="w-full glass-input rounded-lg px-3 py-2"></div><div><label class="block text-sm text-gray-300 mb-2">Email</label><input type="email" value="admin@example.com" class="w-full glass-input rounded-lg px-3 py-2"></div></div><div class="flex justify-end"><button class="glass-button px-6 py-2 rounded-lg">Save</button></div></div></div>
+                                <div class="settings-card"><h2 class="settings-section-title">AI Preferences</h2><div class="space-y-4"><div><label class="block text-sm text-gray-300 mb-2">Default AI Voice</label><select class="settings-select"><option>Male - Standard</option><option>Female - Standard</option></select></div><div><label class="block text-sm text-gray-300 mb-2">Language</label><select class="settings-select"><option>English</option><option>Hindi</option></select></div><div class="flex items-center justify-between"><div><div class="font-medium text-white">Auto Escalation</div><div class="text-sm text-gray-400">Escalate complex calls</div></div><label class="settings-toggle"><input type="checkbox" checked><span class="settings-toggle-slider"></span></label></div></div></div>
+                                <div class="settings-card"><h2 class="settings-section-title">Integrations</h2><div class="space-y-3"><div class="integration-card integration-connected"><div class="flex items-center"><div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(138,109,233,0.3)0%,rgba(138,109,233,0.15)100%)"><i class="fas fa-database text-cyan-300"></i></div><div><div class="font-bold text-white">Salesforce</div><div class="text-sm text-gray-400">Connected</div></div></div><span class="status-success px-2 py-1 text-xs">Active</span></div><div class="integration-card integration-connected"><div class="flex items-center"><div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3" style="background:linear-gradient(135deg, rgba(192,132,252,0.3)0%,rgba(192,132,252,0.15)100%)"><i class="fab fa-whatsapp text-cyan-300"></i></div><div><div class="font-bold text-white">WhatsApp</div><div class="text-sm text-gray-400">Connected</div></div></div><span class="status-success px-2 py-1 text-xs">Active</span></div></div></div>
+                                <div class="danger-zone"><h2 class="settings-section-title" style="color:#fca5a5">Danger Zone</h2><div><div class="font-medium text-white mb-1">Delete Account</div><div class="text-sm text-gray-400 mb-3">Permanently delete account</div><button onclick="showDeleteAccountModal()" class="danger-button"><i class="fas fa-trash mr-2"></i>Delete</button></div></div>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="settings-card"><h2 class="settings-section-title">Profile Picture</h2><div class="text-center"><div class="profile-logo mx-auto mb-4" style="width:80px; height:80px; font-size:32px;">RK</div><div class="settings-file-upload mb-4"><i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-2"></i><div class="text-sm text-gray-400">Click to upload</div></div></div></div>
+                                <div class="settings-card"><h2 class="settings-section-title">API Keys</h2><div class="space-y-3"><div><div class="text-sm text-gray-300 mb-2">Current API Key</div><div class="api-key-display">sk_live_51MqYwqJ8zQ9Xr7v5</div><div class="flex space-x-2 mt-2"><button onclick="copyAPIKey()" class="text-sm text-blue-400">Copy</button><button onclick="regenerateAPIKey()" class="text-sm text-orange-400">Regenerate</button></div></div></div></div>
+                                <div class="settings-card"><h2 class="settings-section-title">Notifications</h2><div class="space-y-3"><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Email</span><label class="settings-toggle"><input type="checkbox" checked><span class="settings-toggle-slider"></span></label></div><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Push</span><label class="settings-toggle"><input type="checkbox" checked><span class="settings-toggle-slider"></span></label></div></div></div>
+                                <div class="settings-card"><h2 class="settings-section-title">Security</h2><div><input type="password" placeholder="New Password" class="w-full glass-input rounded-lg px-3 py-2 mb-2"><button class="glass-button w-full py-2 rounded-lg">Update</button></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Placeholders for Import Leads and Templates pages to avoid errors -->
+                <div id="import-leads-page" class="hidden-page"></div>
+                <div id="templates-page" class="hidden-page"></div>
+                <div id="all-campaigns-page" class="hidden-page"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Modal -->
+    <div id="campaignModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="glass-modal max-w-2xl w-full mx-4 rounded-2xl overflow-hidden">
+            <div class="p-6"><div class="flex items-center justify-between mb-6"><h2 class="text-2xl font-bold text-white">Create Campaign</h2><button onclick="hideCampaignModal()" class="text-cyan-200 hover:text-white"><i class="fas fa-times text-xl"></i></button></div>
+            <form id="campaignForm" class="space-y-6"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm text-cyan-200 mb-2">Name</label><input type="text" required class="w-full glass-input rounded-lg px-3 py-2" placeholder="e.g., Q4 SaaS"></div><div><label class="block text-sm text-cyan-200 mb-2">Type</label><select class="w-full glass-input rounded-lg px-3 py-2"><option>Cold Calling</option></select></div></div><div><label class="block text-sm text-cyan-200 mb-2">Description</label><textarea rows="3" class="w-full glass-input rounded-lg px-3 py-2"></textarea></div><div class="flex items-center justify-between pt-4 border-t border-cyan-700"><button type="button" onclick="hideCampaignModal()" class="glass-button px-6 py-2 rounded-lg">Cancel</button><button type="submit" class="glass-button px-6 py-2 rounded-lg">Create</button></div></form></div>
+        </div>
+    </div>
+
+    <script>
+        const loginPage = document.getElementById('login-page');
+        const mainApp = document.getElementById('main-app');
+        const pages = {
+            'dashboard': document.getElementById('dashboard-page'),
+            'campaigns': document.getElementById('campaigns-page'),
+            'live-calls': document.getElementById('live-calls-page'),
+            'analytics': document.getElementById('analytics-page'),
+            'payments': document.getElementById('payments-page'),
+            'settings': document.getElementById('settings-page'),
+            'import-leads': document.getElementById('import-leads-page'),
+            'templates': document.getElementById('templates-page'),
+            'all-campaigns': document.getElementById('all-campaigns-page')
+        };
+        const modals = { 'campaign': document.getElementById('campaignModal') };
+        let currentPage = 'campaigns';
+
+        // Initialize Charts
+        function initializeCharts() {
+            const callsCtx = document.getElementById('callsChart')?.getContext('2d');
+            if (callsCtx) new Chart(callsCtx, { type: 'line', data: { labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets: [{ label: 'Calls', data: [65,78,92,89,76,85,94], borderColor: '#8a6de9', backgroundColor: 'rgba(138,109,233,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: 'rgba(138,109,233,0.1)' }, ticks: { color: '#fff' } }, y: { grid: { color: 'rgba(138,109,233,0.1)' }, ticks: { color: '#fff' } } } } });
+            const revenueCtx = document.getElementById('revenueChart')?.getContext('2d');
+            if (revenueCtx) new Chart(revenueCtx, { type: 'bar', data: { labels: ['Oct','Nov','Dec','Jan','Feb','Mar'], datasets: [{ label: 'Revenue (₹L)', data: [3.2,4.8,5.2,4.6,6.1,7.3], backgroundColor: '#8a6de9' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+
+        function showPage(pageName) {
+            Object.values(pages).forEach(p => { if(p) { p.classList.add('hidden-page'); p.classList.remove('active-page'); } });
+            if (pages[pageName]) { pages[pageName].classList.remove('hidden-page'); pages[pageName].classList.add('active-page'); currentPage = pageName; }
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const activeLink = document.querySelector(`a[onclick="showPage('${pageName}')"]`);
+            if (activeLink) activeLink.classList.add('active');
+            if (pageName === 'analytics') setTimeout(initializeCharts, 100);
+        }
+
+        document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value, password = document.getElementById('password').value;
+            if (email === 'admin@example.com' && password === 'password123') { login(); } else { alert('Invalid credentials'); }
+        });
+
+        function login() { loginPage.style.display = 'none'; mainApp.classList.remove('hidden'); showPage('campaigns'); setTimeout(initializeCharts, 100); }
+        function logout() { mainApp.classList.add('hidden'); loginPage.style.display = 'flex'; document.getElementById('loginForm')?.reset(); }
+        function toggleUserMenu() { document.getElementById('userMenu')?.classList.toggle('hidden'); }
+        function showCampaignModal() { modals.campaign.classList.remove('hidden'); modals.campaign.style.display = 'flex'; }
+        function hideCampaignModal() { modals.campaign.classList.add('hidden'); setTimeout(() => modals.campaign.style.display = 'none', 300); }
+        function refreshAIStatus() { alert('AI status refreshed!'); }
+        function refreshCalls() { alert('Calls refreshed!'); }
+        function listenToCall(id) { alert('Listening to call ' + id); }
+        function generateInvoice() { alert('Invoice generation started'); }
+        function downloadInvoice() { alert('Downloading invoice'); }
+        function sendInvoice() { alert('Invoice sent'); }
+        function showAddPaymentModal() { alert('Add payment method'); }
+        function copyAPIKey() { alert('API key copied'); }
+        function regenerateAPIKey() { alert('API key regenerated'); }
+        function showDeleteAccountModal() { if(confirm('Delete account permanently?')) alert('Account deleted'); }
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('userMenu'), btn = document.querySelector('.profile-logo')?.closest('div');
+            if (menu && !menu.contains(e.target) && !btn?.contains(e.target)) menu.classList.add('hidden');
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCampaignModal(); });
+        modals.campaign?.addEventListener('click', e => { if (e.target === modals.campaign) hideCampaignModal(); });
+        document.getElementById('campaignForm')?.addEventListener('submit', function(e) { e.preventDefault(); hideCampaignModal(); alert('Campaign created!'); });
+    </script>
+</body>
+</html>
